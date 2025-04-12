@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, MapPin, Award, BookOpen, Users, Check } from "lucide-react";
+import { Calendar, Clock, MapPin, Award, BookOpen, Users, Check, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EventCarousel from "@/components/EventCarousel";
 import EventCard from "@/components/EventCard";
