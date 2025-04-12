@@ -1,10 +1,12 @@
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AIAssistantProvider } from "@/contexts/AIAssistantContext";
 
 // Layouts
 import MainLayout from "@/layouts/MainLayout";
@@ -23,9 +25,7 @@ import TicketsPage from "@/pages/TicketsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import NotFound from "@/pages/NotFound";
-
-// Auth provider
-import { AuthProvider } from "@/contexts/AuthContext";
+import AIAssistantPage from "@/pages/AIAssistantPage";
 
 const queryClient = new QueryClient();
 
@@ -33,16 +33,17 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="light">
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <AIAssistantProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<HomePage />} />
                 <Route path="events" element={<EventsPage />} />
                 <Route path="events/:id" element={<EventDetailsPage />} />
+                <Route path="assistant" element={<AIAssistantPage />} />
               </Route>
 
               {/* Auth routes */}
@@ -67,8 +68,8 @@ const App = () => (
               {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </AIAssistantProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

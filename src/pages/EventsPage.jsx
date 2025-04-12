@@ -1,16 +1,25 @@
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Search, Filter, Calendar, Users, X, Bookmark } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAIAssistant } from "@/contexts/AIAssistantContext";
+import { useAuth } from "@/contexts/AuthContext";
+import EventCard from "@/components/EventCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Search, 
+  Calendar, 
+  Filter, 
+  MapPin, 
+  Tag, 
+  Sparkles,
+  X
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import EventCard from "@/components/EventCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Mock data for events
-const mockAllEvents = [
+// Mock data for events (would fetch from backend in real app)
+const allEvents = [
   {
     id: 1,
     title: "Annual Technical Symposium 2025",
@@ -22,7 +31,11 @@ const mockAllEvents = [
     categories: ["Technical", "Workshop", "Competition"],
     registeredCount: 215,
     maxAttendees: 500,
-    organizer: "School of Engineering"
+    organizer: "School of Engineering",
+    coordinates: {
+      lat: 16.4500,
+      lng: 80.6215
+    }
   },
   {
     id: 2,
@@ -35,7 +48,11 @@ const mockAllEvents = [
     categories: ["Cultural", "Entertainment", "Art"],
     registeredCount: 450,
     maxAttendees: 1000,
-    organizer: "Student Council"
+    organizer: "Student Council",
+    coordinates: {
+      lat: 16.4505,
+      lng: 80.6220
+    }
   },
   {
     id: 3,
@@ -48,7 +65,11 @@ const mockAllEvents = [
     categories: ["Sports", "Tournament", "Athletics"],
     registeredCount: 320,
     maxAttendees: 600,
-    organizer: "Department of Physical Education"
+    organizer: "Department of Physical Education",
+    coordinates: {
+      lat: 16.4510,
+      lng: 80.6225
+    }
   },
   {
     id: 4,
@@ -61,7 +82,11 @@ const mockAllEvents = [
     categories: ["Technical", "Workshop", "AI"],
     registeredCount: 85,
     maxAttendees: 150,
-    organizer: "Computer Science Department"
+    organizer: "Computer Science Department",
+    coordinates: {
+      lat: 16.4515,
+      lng: 80.6230
+    }
   },
   {
     id: 5,
@@ -74,7 +99,11 @@ const mockAllEvents = [
     categories: ["Career", "Seminar", "Development"],
     registeredCount: 120,
     maxAttendees: 200,
-    organizer: "Training & Placement Cell"
+    organizer: "Training & Placement Cell",
+    coordinates: {
+      lat: 16.4520,
+      lng: 80.6235
+    }
   },
   {
     id: 6,
@@ -87,81 +116,46 @@ const mockAllEvents = [
     categories: ["Research", "Exhibition", "Innovation"],
     registeredCount: 65,
     maxAttendees: 150,
-    organizer: "Research Department"
-  },
-  {
-    id: 7,
-    title: "Robotics Workshop 2025",
-    description: "Join us for an exciting robotics workshop where you'll learn to build and program autonomous robots.",
-    date: "2025-05-20",
-    time: "10:00 AM",
-    location: "Engineering Block, Lab 201",
-    bannerImage: "https://srmap.edu.in/wp-content/uploads/2022/07/robo.jpeg",
-    categories: ["Technical", "Workshop", "Robotics"],
-    registeredCount: 45,
-    maxAttendees: 60,
-    organizer: "Robotics Club"
-  },
-  {
-    id: 8,
-    title: "Photography Contest 2025",
-    description: "Showcase your photography skills and win exciting prizes. Theme: 'Campus Life'.",
-    date: "2025-06-10",
-    time: "09:00 AM",
-    location: "Arts Block",
-    bannerImage: "https://srmap.edu.in/wp-content/uploads/2022/10/event1-1536x1024.jpg",
-    categories: ["Cultural", "Contest", "Photography"],
-    registeredCount: 30,
-    maxAttendees: 50,
-    organizer: "Photography Club"
-  },
+    organizer: "Research Department",
+    coordinates: {
+      lat: 16.4525,
+      lng: 80.6240
+    }
+  }
 ];
 
-// Mock past events
-const mockPastEvents = [
+// Past events
+const pastEvents = [
   {
     id: 101,
-    title: "Hackathon 2024",
-    description: "A 24-hour coding competition where students solved real-world problems using technology.",
-    date: "2024-11-15",
-    time: "09:00 AM",
-    location: "Computer Science Block",
-    bannerImage: "https://srmap.edu.in/wp-content/uploads/2022/03/SRM-AP-Commemorates-International-Womens-Day-2022.jpg",
-    categories: ["Technical", "Competition", "Coding"],
-    registeredCount: 200,
-    maxAttendees: 200,
-    organizer: "School of Computing"
-  },
-  {
-    id: 102,
-    title: "Annual Sports Meet 2024",
-    description: "The annual sports competition featuring athletics, cricket, football, and more.",
+    title: "TechFest 2024",
+    description: "Annual technical festival with competitions, workshops, and talks by industry experts.",
     date: "2024-12-10",
-    time: "08:00 AM",
-    location: "University Sports Ground",
-    bannerImage: "https://tse4.mm.bing.net/th?id=OIP.IBHIKR-9dQIEuo0o-ydSawHaE7&pid=Api&P=0&h=180",
-    categories: ["Sports", "Competition", "Athletics"],
-    registeredCount: 500,
-    maxAttendees: 500,
-    organizer: "Department of Physical Education"
-  },
-];
-
-// Mock registered events
-const mockRegisteredEvents = [
-  {
-    id: 1,
-    title: "Annual Technical Symposium 2025",
-    description: "Join us for the largest technical symposium at SRM University AP. Featuring workshops, hackathons, and exciting competitions with amazing prizes.",
-    date: "2025-05-15",
     time: "09:00 AM",
     location: "Main Auditorium",
     bannerImage: "https://tse4.mm.bing.net/th?id=OIP.GLZf5sSo6jCaZ8wwA50MFAHaEn&pid=Api&P=0&h=180",
-    categories: ["Technical", "Workshop", "Competition"],
-    registeredCount: 215,
+    categories: ["Technical", "Festival"],
+    registeredCount: 500,
     maxAttendees: 500,
-    organizer: "School of Engineering"
+    organizer: "Student Technical Council"
   },
+  {
+    id: 102,
+    title: "Annual Sports Meet",
+    description: "Athletic competitions between departments with medals and trophies.",
+    date: "2024-11-15",
+    time: "08:00 AM",
+    location: "Sports Ground",
+    bannerImage: "https://tse4.mm.bing.net/th?id=OIP.IBHIKR-9dQIEuo0o-ydSawHaE7&pid=Api&P=0&h=180",
+    categories: ["Sports", "Competition"],
+    registeredCount: 350,
+    maxAttendees: 400,
+    organizer: "Department of Physical Education"
+  }
+];
+
+// Mock registered events (for the logged-in user)
+const myRegistrations = [
   {
     id: 2,
     title: "Cultural Fest 2025",
@@ -173,35 +167,95 @@ const mockRegisteredEvents = [
     categories: ["Cultural", "Entertainment", "Art"],
     registeredCount: 450,
     maxAttendees: 1000,
-    organizer: "Student Council"
+    organizer: "Student Council",
+    ticketId: "CULT2025-1234"
   },
+  {
+    id: 4,
+    title: "AI & Machine Learning Workshop",
+    description: "Hands-on workshop on the latest AI and ML technologies, featuring sessions by industry experts.",
+    date: "2025-05-25",
+    time: "10:00 AM",
+    location: "Computer Science Block",
+    bannerImage: "https://blog.srmap.edu.in/wp-content/uploads/2023/01/IMG-20230126-WA0019.jpg",
+    categories: ["Technical", "Workshop", "AI"],
+    registeredCount: 85,
+    maxAttendees: 150,
+    organizer: "Computer Science Department",
+    ticketId: "AIML2025-5678"
+  }
 ];
 
+// Get all unique categories from events
+const allCategories = [...new Set([
+  ...allEvents.flatMap(event => event.categories),
+  ...pastEvents.flatMap(event => event.categories)
+])];
+
 const EventsPage = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [filteredEvents, setFilteredEvents] = useState(mockAllEvents);
+  const [locationFilter, setLocationFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [aiRecommendations, setAiRecommendations] = useState([]);
+  const [showAiRecommendations, setShowAiRecommendations] = useState(false);
   
-  // All available categories from events
-  const allCategories = [...new Set(mockAllEvents.flatMap(event => event.categories))].sort();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { getRecommendations } = useAIAssistant();
   
-  // Filter events based on search query and selected categories
+  // Get recommendations from AI
   useEffect(() => {
-    const filtered = mockAllEvents.filter(event => {
-      const matchesSearch = searchQuery === "" || 
-        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.organizer.toLowerCase().includes(searchQuery.toLowerCase());
+    const loadRecommendations = async () => {
+      const recs = await getRecommendations();
+      setAiRecommendations(recs);
+    };
+    
+    loadRecommendations();
+  }, [getRecommendations]);
+  
+  // Filter events based on search term, categories, location, and date
+  useEffect(() => {
+    let eventsList = [];
+    
+    // Determine which events to show based on active tab
+    if (activeTab === "upcoming") {
+      eventsList = [...allEvents];
+    } else if (activeTab === "registered") {
+      eventsList = [...myRegistrations];
+    } else if (activeTab === "past") {
+      eventsList = [...pastEvents];
+    }
+    
+    // Apply filters
+    let filtered = eventsList.filter(event => {
+      // Search term filter
+      const matchesSearch = 
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.organizer.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesCategories = selectedCategories.length === 0 || 
+      // Category filter
+      const matchesCategories = 
+        selectedCategories.length === 0 ||
         selectedCategories.some(cat => event.categories.includes(cat));
       
-      return matchesSearch && matchesCategories;
+      // Location filter
+      const matchesLocation = 
+        !locationFilter ||
+        event.location.toLowerCase().includes(locationFilter.toLowerCase());
+      
+      // Date filter
+      const matchesDate = !dateFilter || event.date === dateFilter;
+      
+      return matchesSearch && matchesCategories && matchesLocation && matchesDate;
     });
     
     setFilteredEvents(filtered);
-  }, [searchQuery, selectedCategories]);
+  }, [activeTab, searchTerm, selectedCategories, locationFilter, dateFilter]);
   
   const toggleCategory = (category) => {
     if (selectedCategories.includes(category)) {
@@ -212,201 +266,232 @@ const EventsPage = () => {
   };
   
   const clearFilters = () => {
-    setSearchQuery("");
+    setSearchTerm("");
     setSelectedCategories([]);
+    setLocationFilter("");
+    setDateFilter("");
   };
-
+  
+  const handleCreateEvent = () => {
+    navigate("/dashboard/create-event");
+  };
+  
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Explore Events</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Discover and register for events happening at SRM University AP
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Discover Events</h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Find and join exciting events happening at SRM University
           </p>
         </div>
-        
-        {/* Search and Filter Bar */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search events, categories, organizers..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex gap-2 items-center"
+        <div className="flex mt-4 md:mt-0">
+          <Button 
+            onClick={() => setShowFilters(!showFilters)}
+            variant="outline"
+            className="mr-2"
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Filters
+            {(selectedCategories.length > 0 || locationFilter || dateFilter) && (
+              <Badge className="ml-2 bg-srm-green" variant="secondary">
+                {selectedCategories.length + (locationFilter ? 1 : 0) + (dateFilter ? 1 : 0)}
+              </Badge>
+            )}
+          </Button>
+          <Button 
+            onClick={handleCreateEvent}
+            className="bg-srm-green hover:bg-srm-green-dark"
+          >
+            Create Event
+          </Button>
+        </div>
+      </div>
+      
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search events, categories, or organizers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          {searchTerm && (
+            <button 
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              onClick={() => setSearchTerm("")}
             >
-              <Filter className="h-5 w-5" />
-              Filters
-              {selectedCategories.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {selectedCategories.length}
-                </Badge>
-              )}
-            </Button>
-            <Link to="/dashboard/create-event">
-              <Button className="bg-srm-green text-white hover:bg-srm-green-dark whitespace-nowrap">
-                Create Event
-              </Button>
-            </Link>
-          </div>
-          
-          {/* Filter Panel */}
-          {showFilters && (
-            <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold">Filter Events</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="text-gray-500 text-sm"
-                >
-                  Clear all filters
-                </Button>
-              </div>
-              
-              <div>
-                <Label className="mb-2 block">Categories</Label>
-                <div className="flex flex-wrap gap-2">
-                  {allCategories.map(category => (
-                    <Badge
-                      key={category}
-                      variant={selectedCategories.includes(category) ? "default" : "outline"}
-                      className={`cursor-pointer ${
-                        selectedCategories.includes(category)
-                          ? "bg-srm-green text-white hover:bg-srm-green-dark"
-                          : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                      }`}
-                      onClick={() => toggleCategory(category)}
-                    >
-                      {category}
-                      {selectedCategories.includes(category) && (
-                        <X className="h-3 w-3 ml-1" />
-                      )}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                <div>
-                  <Label htmlFor="date-filter" className="mb-2 block">Date Range</Label>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <Input type="date" id="date-filter" className="w-full" />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="venue-filter" className="mb-2 block">Venue</Label>
-                  <Input
-                    type="text"
-                    id="venue-filter"
-                    placeholder="Enter venue name"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="organizer-filter" className="mb-2 block">Organizer</Label>
-                  <Input
-                    type="text"
-                    id="organizer-filter"
-                    placeholder="Enter organizer name"
-                  />
-                </div>
-              </div>
-              
-              <div className="mt-4 flex justify-end">
-                <Button onClick={() => setShowFilters(false)}>
-                  Apply Filters
-                </Button>
-              </div>
-            </div>
+              <X className="h-4 w-4" />
+            </button>
           )}
         </div>
+      </div>
+      
+      {/* AI Recommendations */}
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => setShowAiRecommendations(!showAiRecommendations)}
+          className="flex items-center text-srm-green"
+        >
+          <Sparkles className="mr-2 h-4 w-4" />
+          {showAiRecommendations ? "Hide AI Recommendations" : "Show AI Recommendations"}
+        </Button>
         
-        {/* Events Tabs */}
-        <Tabs defaultValue="upcoming" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="upcoming" className="flex gap-2 items-center">
-              <Calendar className="h-4 w-4" />
-              Upcoming Events
-            </TabsTrigger>
-            <TabsTrigger value="registered" className="flex gap-2 items-center">
-              <Bookmark className="h-4 w-4" />
-              My Registrations
-            </TabsTrigger>
-            <TabsTrigger value="past" className="flex gap-2 items-center">
-              <Users className="h-4 w-4" />
-              Past Events
-            </TabsTrigger>
-          </TabsList>
+        {showAiRecommendations && (
+          <div className="mt-4 p-4 bg-gradient-to-r from-srm-green/5 to-srm-gold/5 rounded-lg">
+            <h3 className="text-lg font-semibold mb-3">Recommended For You</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {aiRecommendations.map(rec => (
+                <div 
+                  key={rec.id}
+                  className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/events/${rec.id}`)}
+                >
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-semibold">{rec.title}</h4>
+                    <Badge className="bg-srm-gold text-black">{rec.matchScore}% Match</Badge>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    <Calendar className="inline h-3 w-3 mr-1" />
+                    {rec.date}
+                  </p>
+                  <p className="text-xs mt-2 text-gray-600">
+                    <Sparkles className="inline h-3 w-3 mr-1 text-srm-gold" />
+                    {rec.reason}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
+          <div className="flex justify-between mb-4">
+            <h3 className="text-lg font-semibold">Filter Events</h3>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearFilters}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              Clear All
+            </Button>
+          </div>
           
-          <TabsContent value="upcoming" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <Tag className="inline mr-2 h-4 w-4" />
+                Categories
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {allCategories.map(category => (
+                  <Badge 
+                    key={category}
+                    variant={selectedCategories.includes(category) ? "default" : "outline"}
+                    className={`cursor-pointer ${
+                      selectedCategories.includes(category) 
+                        ? 'bg-srm-green hover:bg-srm-green-dark' 
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                    onClick={() => toggleCategory(category)}
+                  >
+                    {category}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <MapPin className="inline mr-2 h-4 w-4" />
+                Location
+              </label>
+              <Input
+                type="text"
+                placeholder="Filter by location"
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <Calendar className="inline mr-2 h-4 w-4" />
+                Date
+              </label>
+              <Input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <Tabs defaultValue="upcoming" value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList className="grid w-full md:w-auto grid-cols-3">
+          <TabsTrigger value="upcoming">Upcoming Events</TabsTrigger>
+          {isAuthenticated && (
+            <TabsTrigger value="registered">My Registrations</TabsTrigger>
+          )}
+          <TabsTrigger value="past">Past Events</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="upcoming" className="mt-6">
+          {filteredEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredEvents.map(event => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500 dark:text-gray-400">No events found matching your criteria</p>
+              <Button variant="link" onClick={clearFilters}>Clear filters</Button>
+            </div>
+          )}
+        </TabsContent>
+        
+        {isAuthenticated && (
+          <TabsContent value="registered" className="mt-6">
             {filteredEvents.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEvents.map(event => (
-                  <EventCard key={event.id} event={event} />
+                  <EventCard key={event.id} event={event} isRegistered={true} />
                 ))}
               </div>
             ) : (
               <div className="text-center py-12">
-                <h3 className="text-lg font-semibold mb-2">No events found</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Try changing your search or filter criteria
-                </p>
-                <Button onClick={clearFilters}>Clear Filters</Button>
+                <p className="text-gray-500 dark:text-gray-400">You haven't registered for any events yet</p>
+                <Button variant="link" onClick={() => setActiveTab("upcoming")}>Browse events</Button>
               </div>
             )}
           </TabsContent>
-          
-          <TabsContent value="registered" className="mt-0">
-            {mockRegisteredEvents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockRegisteredEvents.map(event => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-semibold mb-2">No registered events</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  You haven't registered for any events yet
-                </p>
-                <Link to="/events">
-                  <Button>Browse Events</Button>
-                </Link>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="past" className="mt-0">
-            {mockPastEvents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockPastEvents.map(event => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-semibold mb-2">No past events</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  There are no past events to display
-                </p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
+        )}
+        
+        <TabsContent value="past" className="mt-6">
+          {filteredEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredEvents.map(event => (
+                <EventCard key={event.id} event={event} isPast={true} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500 dark:text-gray-400">No past events found matching your criteria</p>
+              <Button variant="link" onClick={clearFilters}>Clear filters</Button>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

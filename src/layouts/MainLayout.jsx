@@ -2,6 +2,7 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AIAssistantBubble from "@/components/AIAssistantBubble";
 
 const MainLayout = () => {
   return (
@@ -11,6 +12,7 @@ const MainLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <AIAssistantBubble />
     </div>
   );
 };
