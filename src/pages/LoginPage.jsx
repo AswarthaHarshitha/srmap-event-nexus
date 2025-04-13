@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Mail, Lock, LogIn } from "lucide-react";
+import { Mail, Lock, LogIn, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +54,14 @@ const LoginPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSocialLogin = (provider) => {
+    toast({
+      title: `${provider} Sign In`,
+      description: "This feature is coming soon!",
+      variant: "info",
+    });
   };
 
   return (
@@ -140,19 +148,24 @@ const LoginPage = () => {
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 grid grid-cols-2 gap-3">
           <Button
             type="button"
             variant="outline"
             className="w-full"
-            onClick={() => toast({
-              title: "Google Sign In",
-              description: "This feature is coming soon!",
-              variant: "info",
-            })}
+            onClick={() => handleSocialLogin('Google')}
           >
             <Mail className="w-4 h-4 mr-2" />
             Google
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => handleSocialLogin('GitHub')}
+          >
+            <Github className="w-4 h-4 mr-2" />
+            GitHub
           </Button>
         </div>
       </div>

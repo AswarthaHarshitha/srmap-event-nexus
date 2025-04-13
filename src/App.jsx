@@ -22,7 +22,9 @@ import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
 import StudentDashboardPage from "@/pages/StudentDashboardPage";
 import OrganizerDashboardPage from "@/pages/OrganizerDashboardPage";
+import OrganizerEventsPage from "@/pages/OrganizerEventsPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import AdminUsersPage from "@/pages/AdminUsersPage";
 import TicketsPage from "@/pages/TicketsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import NotFound from "@/pages/NotFound";
@@ -66,7 +68,7 @@ const App = () => (
                 <Route path="organizer" element={<DashboardLayout isOrganizer={true} />}>
                   <Route index element={<OrganizerDashboardPage />} />
                   <Route path="create-event" element={<CreateEventPage />} />
-                  <Route path="events" element={<div className="p-6">Your created events will appear here</div>} />
+                  <Route path="events" element={<OrganizerEventsPage />} />
                   <Route path="registrations" element={<div className="p-6">Your event registrations will appear here</div>} />
                   <Route path="analytics" element={<div className="p-6">Event analytics will appear here</div>} />
                   <Route path="profile" element={<ProfilePage />} />
@@ -76,7 +78,7 @@ const App = () => (
                 <Route path="admin" element={<DashboardLayout isAdmin={true} />}>
                   <Route index element={<AdminDashboardPage />} />
                   <Route path="events" element={<div className="p-6">All events management will appear here</div>} />
-                  <Route path="users" element={<div className="p-6">User management will appear here</div>} />
+                  <Route path="users" element={<AdminUsersPage />} />
                   <Route path="approvals" element={<div className="p-6">Approval requests will appear here</div>} />
                   <Route path="system" element={<div className="p-6">System status will appear here</div>} />
                   <Route path="reports" element={<div className="p-6">Reports will appear here</div>} />

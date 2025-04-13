@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, User, Mail, Lock, UserCheck, BookUser, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Lock, UserCheck, BookUser, ShieldCheck, Github } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +76,14 @@ const SignupPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSocialSignup = (provider) => {
+    toast({
+      title: `${provider} Sign Up`,
+      description: "This feature is coming soon!",
+      variant: "info",
+    });
   };
 
   const roleOptions = [
@@ -319,21 +327,25 @@ const SignupPage = () => {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-3">
-          <button
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <Button
             type="button"
-            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-            onClick={() => {
-              toast({
-                title: "Google Sign In",
-                description: "This feature is coming soon!",
-                variant: "info",
-              });
-            }}
+            variant="outline"
+            className="w-full"
+            onClick={() => handleSocialSignup('Google')}
           >
             <Mail className="w-5 h-5 mr-2" />
-            <span>Google</span>
-          </button>
+            Google
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => handleSocialSignup('GitHub')}
+          >
+            <Github className="w-5 h-5 mr-2" />
+            GitHub
+          </Button>
         </div>
       </div>
 
