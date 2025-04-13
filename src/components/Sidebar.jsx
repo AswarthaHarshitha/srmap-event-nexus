@@ -12,20 +12,25 @@ import {
   Users,
   ClipboardCheck,
   BarChart,
+  FileText,
+  Shield,
+  Clock,
+  Star
 } from "lucide-react";
 
-const Sidebar = ({ isAdmin = false }) => {
+const Sidebar = ({ isAdmin = false, isOrganizer = false }) => {
   const { user, logout } = useAuth();
 
-  const userNavigation = [
+  // Student navigation
+  const studentNavigation = [
     {
       name: "Dashboard",
       path: "/dashboard",
       icon: <LayoutDashboard className="w-5 h-5" />,
     },
     {
-      name: "My Events",
-      path: "/dashboard/events",
+      name: "Browse Events",
+      path: "/events",
       icon: <Calendar className="w-5 h-5" />,
     },
     {
@@ -34,17 +39,47 @@ const Sidebar = ({ isAdmin = false }) => {
       icon: <Ticket className="w-5 h-5" />,
     },
     {
-      name: "Create Event",
-      path: "/dashboard/create-event",
-      icon: <PlusCircle className="w-5 h-5" />,
-    },
-    {
       name: "Profile",
       path: "/dashboard/profile",
       icon: <User className="w-5 h-5" />,
     },
   ];
 
+  // Organizer navigation
+  const organizerNavigation = [
+    {
+      name: "Dashboard",
+      path: "/organizer",
+      icon: <LayoutDashboard className="w-5 h-5" />,
+    },
+    {
+      name: "My Events",
+      path: "/organizer/events",
+      icon: <Calendar className="w-5 h-5" />,
+    },
+    {
+      name: "Create Event",
+      path: "/organizer/create-event",
+      icon: <PlusCircle className="w-5 h-5" />,
+    },
+    {
+      name: "Registrations",
+      path: "/organizer/registrations",
+      icon: <Users className="w-5 h-5" />,
+    },
+    {
+      name: "Analytics",
+      path: "/organizer/analytics",
+      icon: <BarChart className="w-5 h-5" />,
+    },
+    {
+      name: "Profile",
+      path: "/organizer/profile",
+      icon: <User className="w-5 h-5" />,
+    },
+  ];
+
+  // Admin navigation
   const adminNavigation = [
     {
       name: "Admin Dashboard",
@@ -67,9 +102,14 @@ const Sidebar = ({ isAdmin = false }) => {
       icon: <ClipboardCheck className="w-5 h-5" />,
     },
     {
+      name: "System Status",
+      path: "/admin/system",
+      icon: <Shield className="w-5 h-5" />,
+    },
+    {
       name: "Reports",
       path: "/admin/reports",
-      icon: <BarChart className="w-5 h-5" />,
+      icon: <FileText className="w-5 h-5" />,
     },
     {
       name: "Settings",
@@ -78,7 +118,20 @@ const Sidebar = ({ isAdmin = false }) => {
     },
   ];
 
-  const navigation = isAdmin ? adminNavigation : userNavigation;
+  // Determine which navigation to use
+  let navigation;
+  let roleLabel;
+
+  if (isAdmin) {
+    navigation = adminNavigation;
+    roleLabel = "Administrator";
+  } else if (isOrganizer) {
+    navigation = organizerNavigation;
+    roleLabel = "Event Organizer";
+  } else {
+    navigation = studentNavigation;
+    roleLabel = "Student";
+  }
 
   return (
     <div className="hidden md:flex md:flex-shrink-0">
@@ -99,8 +152,14 @@ const Sidebar = ({ isAdmin = false }) => {
             />
             <h3 className="mt-2 text-lg font-semibold">{user.name}</h3>
             <p className="text-sm text-gray-500">{user.email}</p>
-            <span className="mt-1 px-2 py-1 text-xs bg-srm-gold/20 text-srm-gold-dark rounded-full">
-              {user.role === "admin" ? "Administrator" : "Student"}
+            <span className={`mt-1 px-2 py-1 text-xs rounded-full ${
+              isAdmin 
+                ? "bg-red-100 text-red-800" 
+                : isOrganizer 
+                  ? "bg-blue-100 text-blue-800" 
+                  : "bg-srm-gold/20 text-srm-gold-dark"
+            }`}>
+              {roleLabel}
             </span>
           </div>
           <div className="flex flex-col flex-grow px-4 mt-5">

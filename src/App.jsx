@@ -20,10 +20,11 @@ import EventDetailsPage from "@/pages/EventDetailsPage";
 import CreateEventPage from "@/pages/CreateEventPage";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
-import DashboardPage from "@/pages/DashboardPage";
+import StudentDashboardPage from "@/pages/StudentDashboardPage";
+import OrganizerDashboardPage from "@/pages/OrganizerDashboardPage";
+import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import TicketsPage from "@/pages/TicketsPage";
 import ProfilePage from "@/pages/ProfilePage";
-import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import NotFound from "@/pages/NotFound";
 import AIAssistantPage from "@/pages/AIAssistantPage";
 
@@ -52,11 +53,17 @@ const App = () => (
                 <Route path="signup" element={<SignupPage />} />
               </Route>
 
-              {/* Protected routes */}
+              {/* Student routes */}
               <Route path="dashboard" element={<DashboardLayout />}>
-                <Route index element={<DashboardPage />} />
-                <Route path="create-event" element={<CreateEventPage />} />
+                <Route index element={<StudentDashboardPage />} />
                 <Route path="tickets" element={<TicketsPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+              </Route>
+
+              {/* Organizer routes */}
+              <Route path="organizer" element={<DashboardLayout isOrganizer={true} />}>
+                <Route index element={<OrganizerDashboardPage />} />
+                <Route path="create-event" element={<CreateEventPage />} />
                 <Route path="profile" element={<ProfilePage />} />
               </Route>
 

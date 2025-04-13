@@ -10,11 +10,19 @@ const authAPI = {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         if (email && password) {
+          // Determine role based on email for demo purposes
+          let role = 'student';
+          if (email.includes('admin')) {
+            role = 'admin';
+          } else if (email.includes('organizer') || email.includes('org')) {
+            role = 'organizer';
+          }
+          
           const mockUser = {
             id: '1',
-            name: 'SRM Student',
+            name: 'SRM User',
             email,
-            role: email.includes('admin') ? 'admin' : 'user',
+            role,
             profileImage: 'https://i.pravatar.cc/150?u=' + email
           };
           localStorage.setItem('user', JSON.stringify(mockUser));
@@ -27,16 +35,23 @@ const authAPI = {
     });
   },
   
-  register: (name, email, password) => {
+  register: (name, email, password, role = 'student') => {
     // This would be an actual API call in production
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         if (name && email && password) {
+          // Override role based on email for demo purposes
+          if (email.includes('admin')) {
+            role = 'admin';
+          } else if (email.includes('organizer') || email.includes('org')) {
+            role = 'organizer';
+          }
+          
           const mockUser = {
             id: '1',
             name,
             email,
-            role: 'user',
+            role,
             profileImage: 'https://i.pravatar.cc/150?u=' + email
           };
           localStorage.setItem('user', JSON.stringify(mockUser));
@@ -94,11 +109,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, password) => {
+  const register = async (name, email, password, role = 'student') => {
     setLoading(true);
     setError(null);
     try {
-      const user = await authAPI.register(name, email, password);
+      const user = await authAPI.register(name, email, password, role);
       setUser(user);
       return user;
     } catch (error) {
@@ -125,6 +140,32 @@ export const AuthProvider = ({ children }) => {
     return user?.role === 'admin';
   };
 
+  const isOrganizer = () => {
+    return user?.role === 'organizer' || user?.role === 'admin';
+  };
+
+  const isStudent = () => {
+    return user?.role === 'student';
+  };
+
+  const getUserRole = () => {
+    return user?.role || 'guest';
+  };
+
+  // Get the dashboard URL based on user role
+  const getDashboardUrl = () => {
+    if (!user) return '/auth/login';
+    
+    switch (user.role) {
+      case 'admin':
+        return '/admin';
+      case 'organizer':
+        return '/organizer';
+      default:
+        return '/dashboard';
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -135,7 +176,11 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         isAuthenticated: !!user,
-        isAdmin
+        isAdmin,
+        isOrganizer,
+        isStudent,
+        getUserRole,
+        getDashboardUrl
       }}
     >
       {children}
