@@ -7,7 +7,7 @@ import DashboardHeader from "@/components/DashboardHeader";
 import { useToast } from "@/components/ui/use-toast";
 
 const DashboardLayout = ({ isAdmin = false, isOrganizer = false }) => {
-  const { isAuthenticated, user, loading } = useAuth();
+  const { isAuthenticated, user, loading, dbConnected } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -24,8 +24,15 @@ const DashboardLayout = ({ isAdmin = false, isOrganizer = false }) => {
         description: `Logged in as ${user.name} (${user.email})`,
         variant: "success",
       });
+      
+      // Show MongoDB connection status
+      if (dbConnected) {
+        console.log('Connected to MongoDB: mongodb://localhost:27017/event_sphere');
+      } else {
+        console.warn('Not connected to MongoDB');
+      }
     }
-  }, [isAuthenticated, user, isAdmin, isOrganizer, toast]);
+  }, [isAuthenticated, user, isAdmin, isOrganizer, toast, dbConnected]);
 
   // While authentication is loading, show a loading state
   if (loading) {

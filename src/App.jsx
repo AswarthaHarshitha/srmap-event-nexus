@@ -25,6 +25,9 @@ import OrganizerDashboardPage from "@/pages/OrganizerDashboardPage";
 import OrganizerEventsPage from "@/pages/OrganizerEventsPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import AdminUsersPage from "@/pages/AdminUsersPage";
+import AdminEventsPage from "@/pages/AdminEventsPage";
+import AdminReportsPage from "@/pages/AdminReportsPage";
+import AdminSystemPage from "@/pages/AdminSystemPage";
 import TicketsPage from "@/pages/TicketsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import NotFound from "@/pages/NotFound";
@@ -77,11 +80,11 @@ const App = () => (
                 {/* Admin routes */}
                 <Route path="admin" element={<DashboardLayout isAdmin={true} />}>
                   <Route index element={<AdminDashboardPage />} />
-                  <Route path="events" element={<div className="p-6">All events management will appear here</div>} />
+                  <Route path="events" element={<AdminEventsPage />} />
                   <Route path="users" element={<AdminUsersPage />} />
                   <Route path="approvals" element={<div className="p-6">Approval requests will appear here</div>} />
-                  <Route path="system" element={<div className="p-6">System status will appear here</div>} />
-                  <Route path="reports" element={<div className="p-6">Reports will appear here</div>} />
+                  <Route path="system" element={<AdminSystemPage />} />
+                  <Route path="reports" element={<AdminReportsPage />} />
                   <Route path="settings" element={<div className="p-6">Settings will appear here</div>} />
                 </Route>
 

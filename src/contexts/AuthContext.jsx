@@ -1,5 +1,6 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import mockMongoDBConnection from '@/utils/dbConnection';
 
 const AuthContext = createContext();
 
@@ -28,6 +29,10 @@ const authAPI = {
             registeredEvents: [],
             profileImage: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}&backgroundColor=b6e3f4,c0aede,d1d4f9`
           };
+          
+          // Simulate storing in MongoDB
+          console.log('Logging in user and updating in MongoDB:', mockUser);
+          
           localStorage.setItem('user', JSON.stringify(mockUser));
           localStorage.setItem('token', 'mock-jwt-token-' + Date.now());
           resolve(mockUser);
@@ -41,7 +46,7 @@ const authAPI = {
   register: (name, email, password, role = 'student') => {
     // This would be an actual API call in production
     return new Promise((resolve, reject) => {
-      setTimeout(() => {
+      setTimeout(async () => {
         if (name && email && password) {
           // Override role based on email for demo purposes (this would be removed in production)
           if (email.includes('admin')) {
@@ -60,6 +65,22 @@ const authAPI = {
             registeredEvents: [],
             profileImage: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}&backgroundColor=b6e3f4,c0aede,d1d4f9`
           };
+          
+          // Simulate storing in MongoDB
+          try {
+            const createdUser = await mockMongoDBConnection.createUser({
+              name,
+              email,
+              role,
+              password: "***hashed***", // In real app, password would be hashed
+              createdAt: new Date().toISOString()
+            });
+            
+            console.log('User created in MongoDB:', createdUser);
+          } catch (error) {
+            console.error('Error creating user in MongoDB:', error);
+          }
+          
           localStorage.setItem('user', JSON.stringify(mockUser));
           localStorage.setItem('token', 'mock-jwt-token-' + Date.now());
           resolve(mockUser);
@@ -90,6 +111,10 @@ const authAPI = {
       setTimeout(() => {
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         const updatedUser = { ...currentUser, ...userData };
+        
+        // Simulate updating in MongoDB
+        console.log('Updating user in MongoDB:', updatedUser);
+        
         localStorage.setItem('user', JSON.stringify(updatedUser));
         resolve(updatedUser);
       }, 500);
@@ -101,6 +126,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [dbConnected, setDbConnected] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -108,7 +134,20 @@ export const AuthProvider = ({ children }) => {
     if (currentUser) {
       setUser(currentUser);
     }
-    setLoading(false);
+    
+    // Test MongoDB connection
+    mockMongoDBConnection.testConnection()
+      .then(result => {
+        console.log('MongoDB connection test:', result);
+        setDbConnected(result.success);
+      })
+      .catch(err => {
+        console.error('MongoDB connection error:', err);
+        setDbConnected(false);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const login = async (email, password) => {
@@ -212,7 +251,8 @@ export const AuthProvider = ({ children }) => {
         isOrganizer,
         isStudent,
         getUserRole,
-        getDashboardUrl
+        getDashboardUrl,
+        dbConnected
       }}
     >
       {children}
