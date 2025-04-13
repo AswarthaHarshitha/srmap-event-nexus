@@ -2,12 +2,16 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, User, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Lock, UserCheck, BookUser, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  RadioGroup,
+  RadioGroupItem
+} from "@/components/ui/radio-group";
 
 const SignupPage = () => {
   const { register: registerUser } = useAuth();
@@ -15,6 +19,7 @@ const SignupPage = () => {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState("student");
   
   const {
     register,
@@ -27,6 +32,7 @@ const SignupPage = () => {
       email: "",
       password: "",
       confirmPassword: "",
+      role: "student"
     },
   });
 
@@ -44,12 +50,23 @@ const SignupPage = () => {
 
     setIsLoading(true);
     try {
-      await registerUser(data.name, data.email, data.password);
+      await registerUser(data.name, data.email, data.password, role);
       toast({
         title: "Account created!",
-        description: "Welcome to EVENTSPHERE!",
+        description: `Welcome to EVENTSPHERE! You've been registered as a ${role}.`,
       });
-      navigate("/dashboard");
+      
+      // Redirect based on role
+      switch (role) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'organizer':
+          navigate('/organizer');
+          break;
+        default:
+          navigate('/dashboard');
+      }
     } catch (error) {
       toast({
         title: "Registration failed",
@@ -60,6 +77,12 @@ const SignupPage = () => {
       setIsLoading(false);
     }
   };
+
+  const roleOptions = [
+    { value: "student", label: "Student", icon: UserCheck },
+    { value: "organizer", label: "Event Organizer", icon: BookUser },
+    { value: "admin", label: "Administrator", icon: ShieldCheck },
+  ];
 
   return (
     <div>
@@ -135,6 +158,39 @@ const SignupPage = () => {
           {errors.email && (
             <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
           )}
+        </div>
+
+        <div>
+          <Label
+            htmlFor="role"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            I am signing up as
+          </Label>
+          <div className="mt-2">
+            <RadioGroup 
+              value={role} 
+              onValueChange={setRole}
+              className="grid grid-cols-3 gap-4"
+            >
+              {roleOptions.map((option) => (
+                <div key={option.value} className="relative">
+                  <RadioGroupItem
+                    value={option.value}
+                    id={`role-${option.value}`}
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor={`role-${option.value}`}
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-muted hover:text-accent-foreground peer-data-[state=checked]:border-srm-green peer-data-[state=checked]:bg-green-50 [&:has([data-state=checked])]:border-primary cursor-pointer"
+                  >
+                    <option.icon className="mb-3 h-6 w-6" />
+                    {option.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
         </div>
 
         <div>
@@ -263,42 +319,29 @@ const SignupPage = () => {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="mt-6 grid grid-cols-1 gap-3">
           <button
             type="button"
             className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+            onClick={() => {
+              toast({
+                title: "Google Sign In",
+                description: "This feature is coming soon!",
+                variant: "info",
+              });
+            }}
           >
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 0C4.477 0 0 4.477 0 10c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.338-3.369-1.338-.454-1.156-1.11-1.464-1.11-1.464-.908-.619.069-.606.069-.606 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.268 2.75 1.026A9.578 9.578 0 0110 4.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.026 2.747-1.026.546 1.377.203 2.394.1 2.647.64.7 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.933.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C17.14 18.163 20 14.418 20 10c0-5.523-4.477-10-10-10z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>GitHub</span>
-          </button>
-          <button
-            type="button"
-            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-          >
-            <svg
-              className="w-5 h-5 mr-2"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5.46 8.12l-1.1 5.19c-.08.38-.45.67-.84.67H8.5c-.39 0-.76-.29-.84-.67l-1.1-5.19c-.08-.38.13-.76.5-.85.07-.02.14-.03.21-.03h9.38c.47 0 .85.38.85.85 0 .07-.01.14-.04.21z"
-              />
-            </svg>
+            <Mail className="w-5 h-5 mr-2" />
             <span>Google</span>
           </button>
         </div>
+      </div>
+
+      <div className="mt-4 text-center text-xs text-gray-500">
+        <span className="block mb-1">For testing purposes:</span>
+        <span className="block">Student: Register with any @srm.edu.in email</span>
+        <span className="block">Organizer: Use organizer@srm.edu.in pattern</span>
+        <span className="block">Admin: Use admin@srm.edu.in pattern</span>
       </div>
     </div>
   );

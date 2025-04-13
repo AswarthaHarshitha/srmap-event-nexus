@@ -19,14 +19,17 @@ const authAPI = {
           }
           
           const mockUser = {
-            id: '1',
-            name: 'SRM User',
+            id: Math.random().toString(36).substring(2, 9),
+            name: email.split('@')[0].split('.').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
             email,
             role,
-            profileImage: 'https://i.pravatar.cc/150?u=' + email
+            department: role === 'student' ? 'Computer Science' : '',
+            yearOfStudy: role === 'student' ? Math.floor(Math.random() * 4) + 1 : null,
+            registeredEvents: [],
+            profileImage: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}&backgroundColor=b6e3f4,c0aede,d1d4f9`
           };
           localStorage.setItem('user', JSON.stringify(mockUser));
-          localStorage.setItem('token', 'mock-jwt-token');
+          localStorage.setItem('token', 'mock-jwt-token-' + Date.now());
           resolve(mockUser);
         } else {
           reject(new Error('Invalid credentials'));
@@ -40,7 +43,7 @@ const authAPI = {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         if (name && email && password) {
-          // Override role based on email for demo purposes
+          // Override role based on email for demo purposes (this would be removed in production)
           if (email.includes('admin')) {
             role = 'admin';
           } else if (email.includes('organizer') || email.includes('org')) {
@@ -48,14 +51,17 @@ const authAPI = {
           }
           
           const mockUser = {
-            id: '1',
+            id: Math.random().toString(36).substring(2, 9),
             name,
             email,
             role,
-            profileImage: 'https://i.pravatar.cc/150?u=' + email
+            department: role === 'student' ? 'Computer Science' : '',
+            yearOfStudy: role === 'student' ? Math.floor(Math.random() * 4) + 1 : null,
+            registeredEvents: [],
+            profileImage: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}&backgroundColor=b6e3f4,c0aede,d1d4f9`
           };
           localStorage.setItem('user', JSON.stringify(mockUser));
-          localStorage.setItem('token', 'mock-jwt-token');
+          localStorage.setItem('token', 'mock-jwt-token-' + Date.now());
           resolve(mockUser);
         } else {
           reject(new Error('All fields are required'));
@@ -77,6 +83,17 @@ const authAPI = {
   
   isAuthenticated: () => {
     return !!localStorage.getItem('token');
+  },
+  
+  updateProfile: (userData) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const updatedUser = { ...currentUser, ...userData };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        resolve(updatedUser);
+      }, 500);
+    });
   }
 };
 
@@ -136,6 +153,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (userData) => {
+    setLoading(true);
+    try {
+      const updatedUser = await authAPI.updateProfile(userData);
+      setUser(updatedUser);
+      return updatedUser;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const isAdmin = () => {
     return user?.role === 'admin';
   };
@@ -175,6 +206,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
+        updateProfile,
         isAuthenticated: !!user,
         isAdmin,
         isOrganizer,

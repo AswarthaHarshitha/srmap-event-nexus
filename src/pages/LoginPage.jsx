@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Mail } from "lucide-react";
+import { Mail, Lock, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,23 +57,34 @@ const LoginPage = () => {
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">
-        Sign in to your account
-      </h2>
+    <div className="space-y-6">
+      <div className="space-y-2 text-center">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Welcome back
+        </h2>
+        <p className="text-gray-500 dark:text-gray-400">
+          Sign in to access your EVENTSPHERE account
+        </p>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email address</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="student@srm.edu.in"
-            required
-            value={formData.email}
-            onChange={handleChange}
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail className="h-5 w-5 text-gray-400" />
+            </div>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="student@srm.edu.in"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className="pl-10"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -86,15 +97,21 @@ const LoginPage = () => {
               Forgot password?
             </Link>
           </div>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            required
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="h-5 w-5 text-gray-400" />
+            </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              required
+              value={formData.password}
+              onChange={handleChange}
+              className="pl-10"
+            />
+          </div>
         </div>
 
         <Button
@@ -102,6 +119,11 @@ const LoginPage = () => {
           className="w-full bg-srm-green text-white hover:bg-srm-green-dark"
           disabled={isLoading}
         >
+          {isLoading ? (
+            <span className="animate-spin rounded-full h-5 w-5 border-t-2 border-white mr-2"></span>
+          ) : (
+            <LogIn className="h-5 w-5 mr-2" />
+          )}
           {isLoading ? "Signing in..." : "Sign in"}
         </Button>
       </form>
@@ -125,7 +147,7 @@ const LoginPage = () => {
             className="w-full"
             onClick={() => toast({
               title: "Google Sign In",
-              description: "This feature is not implemented in the demo.",
+              description: "This feature is coming soon!",
               variant: "info",
             })}
           >
@@ -145,13 +167,26 @@ const LoginPage = () => {
         </Link>
       </p>
 
-      <p className="mt-4 text-center text-xs text-gray-500">
-        <span className="block mb-1">Demo login credentials:</span>
-        <span className="block">Student: student@srm.edu.in</span>
-        <span className="block">Organizer: organizer@srm.edu.in</span>
-        <span className="block">Admin: admin@srm.edu.in</span>
-        <span className="block font-medium">(Any password will work)</span>
-      </p>
+      <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <p className="text-center text-xs text-gray-500 font-medium mb-2">
+          Demo login credentials:
+        </p>
+        <div className="grid grid-cols-3 gap-2 text-xs text-gray-500">
+          <div className="bg-white dark:bg-gray-700 p-2 rounded shadow-sm">
+            <div className="font-semibold mb-1">Student</div>
+            <div>student@srm.edu.in</div>
+          </div>
+          <div className="bg-white dark:bg-gray-700 p-2 rounded shadow-sm">
+            <div className="font-semibold mb-1">Organizer</div>
+            <div>organizer@srm.edu.in</div>
+          </div>
+          <div className="bg-white dark:bg-gray-700 p-2 rounded shadow-sm">
+            <div className="font-semibold mb-1">Admin</div>
+            <div>admin@srm.edu.in</div>
+          </div>
+        </div>
+        <div className="text-center text-xs mt-2">(Any password will work for demo)</div>
+      </div>
     </div>
   );
 };
