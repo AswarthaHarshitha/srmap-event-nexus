@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'organizer'],
+    enum: ['student', 'organizer', 'admin'],
     default: 'student'
   },
   registeredEvents: [{
@@ -37,6 +37,25 @@ const userSchema = new mongoose.Schema({
     type: String
   },
   profilePicture: {
+    type: String
+  },
+  resetToken: {
+    type: String
+  },
+  resetTokenExpiry: {
+    type: Date
+  },
+  interests: [{
+    type: String,
+    enum: ['academic', 'cultural', 'sports', 'technical', 'workshop', 'other']
+  }],
+  department: {
+    type: String
+  },
+  yearOfStudy: {
+    type: Number
+  },
+  contactNumber: {
     type: String
   },
   createdAt: {
