@@ -37,7 +37,18 @@ import ProfilePage from "@/pages/ProfilePage";
 import NotFound from "@/pages/NotFound";
 import AIAssistantPage from "@/pages/AIAssistantPage";
 
-const queryClient = new QueryClient();
+// Authentication Guards
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RoleRoute } from "@/components/RoleRoute";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -64,15 +75,29 @@ const App = () => (
                   <Route path="forgot-password" element={<div className="p-6 text-center">Password reset functionality coming soon!</div>} />
                 </Route>
 
-                {/* Student routes */}
-                <Route path="dashboard" element={<DashboardLayout />}>
+                {/* Student routes - protected for authenticated users */}
+                <Route 
+                  path="dashboard" 
+                  element={
+                    <ProtectedRoute>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
                   <Route index element={<StudentDashboardPage />} />
                   <Route path="tickets" element={<TicketsPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                 </Route>
 
-                {/* Organizer routes */}
-                <Route path="organizer" element={<DashboardLayout isOrganizer={true} />}>
+                {/* Organizer routes - protected for organizer role */}
+                <Route 
+                  path="organizer" 
+                  element={
+                    <RoleRoute allowedRoles={["organizer", "admin"]}>
+                      <DashboardLayout isOrganizer={true} />
+                    </RoleRoute>
+                  }
+                >
                   <Route index element={<OrganizerDashboardPage />} />
                   <Route path="create-event" element={<CreateEventPage />} />
                   <Route path="events" element={<OrganizerEventsPage />} />
@@ -81,8 +106,15 @@ const App = () => (
                   <Route path="profile" element={<ProfilePage />} />
                 </Route>
 
-                {/* Admin routes */}
-                <Route path="admin" element={<DashboardLayout isAdmin={true} />}>
+                {/* Admin routes - protected for admin role */}
+                <Route 
+                  path="admin" 
+                  element={
+                    <RoleRoute allowedRoles={["admin"]}>
+                      <DashboardLayout isAdmin={true} />
+                    </RoleRoute>
+                  }
+                >
                   <Route index element={<AdminDashboardPage />} />
                   <Route path="events" element={<AdminEventsPage />} />
                   <Route path="users" element={<AdminUsersPage />} />
