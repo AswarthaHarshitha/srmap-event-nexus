@@ -2,332 +2,219 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import mockMongoDBConnection from "@/utils/dbConnection";
 import { 
-  CalendarCheck, 
-  Ticket, 
+  Calendar, 
   Clock, 
-  Award, 
-  AlertTriangle 
+  MapPin, 
+  Users, 
+  Tag, 
+  TicketIcon
 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import EventCard from "@/components/EventCard";
-
-// Mock data for dashboard
-const mockEvents = [
-  {
-    id: 7,
-    title: "Robotics Workshop 2025",
-    description: "Join us for an exciting robotics workshop where you'll learn to build and program autonomous robots.",
-    date: "2025-05-20",
-    time: "10:00 AM",
-    location: "Engineering Block, Lab 201",
-    bannerImage: "https://srmap.edu.in/wp-content/uploads/2022/07/robo.jpeg",
-    categories: ["Technical", "Workshop", "Robotics"],
-    registeredCount: 45,
-    maxAttendees: 60,
-    organizer: "Robotics Club"
-  },
-  {
-    id: 8,
-    title: "Photography Contest 2025",
-    description: "Showcase your photography skills and win exciting prizes. Theme: 'Campus Life'.",
-    date: "2025-06-10",
-    time: "09:00 AM",
-    location: "Arts Block",
-    bannerImage: "https://srmap.edu.in/wp-content/uploads/2022/10/event1-1536x1024.jpg",
-    categories: ["Cultural", "Contest", "Photography"],
-    registeredCount: 30,
-    maxAttendees: 50,
-    organizer: "Photography Club"
-  },
-];
-
-const mockTickets = [
-  {
-    id: 1,
-    eventId: 1,
-    ticketId: "TKT-1001",
-    event: {
-      title: "Annual Technical Symposium 2025",
-      date: "2025-05-15",
-      time: "09:00 AM",
-      location: "Main Auditorium",
-      categories: ["Technical", "Workshop", "Competition"],
-    },
-    qrCode: "https://example.com/qr/1001",
-    status: "valid",
-    seat: "General"
-  },
-  {
-    id: 2,
-    eventId: 2,
-    ticketId: "TKT-1002",
-    event: {
-      title: "Cultural Fest 2025",
-      date: "2025-06-20",
-      time: "10:00 AM",
-      location: "University Ground",
-      categories: ["Cultural", "Entertainment", "Art"],
-    },
-    qrCode: "https://example.com/qr/1002",
-    status: "valid",
-    seat: "VIP"
-  }
-];
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
 
 const StudentDashboardPage = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState({
-    registered: 0,
-    upcoming: 0,
-    attended: 0
-  });
+  const { toast } = useToast();
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Animation for stats counters
   useEffect(() => {
-    const interval = setInterval(() => {
-      setStats(prev => {
-        return {
-          registered: prev.registered >= 5 ? 5 : prev.registered + 1,
-          upcoming: prev.upcoming >= 3 ? 3 : prev.upcoming + 1,
-          attended: prev.attended >= 7 ? 7 : prev.attended + 1
-        };
+    const loadEvents = async () => {
+      try {
+        // Get events from mock MongoDB
+        const events = await mockMongoDBConnection.findEvents({ status: 'approved' });
+        // Sort by date (newest first)
+        const sortedEvents = events
+          .filter(event => new Date(event.date) >= new Date()) // Only future events
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        setUpcomingEvents(sortedEvents.slice(0, 4)); // Get first 4 upcoming events
+      } catch (error) {
+        console.error("Error loading events:", error);
+        toast({
+          title: "Failed to load events",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadEvents();
+  }, [toast]);
+
+  const handleRegisterForEvent = async (eventId) => {
+    try {
+      await mockMongoDBConnection.registerForEvent(eventId, user.id);
+      
+      toast({
+        title: "Registration Successful!",
+        description: "You have successfully registered for this event",
+        variant: "success",
       });
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Mock notifications
-  const notifications = [
-    {
-      id: 1,
-      title: "New Event Registration",
-      message: "You have successfully registered for Technical Symposium.",
-      time: "5 minutes ago",
-      type: "success"
-    },
-    {
-      id: 2,
-      title: "Event Reminder",
-      message: "Cultural Fest starts tomorrow at 10:00 AM.",
-      time: "1 hour ago",
-      type: "info"
-    },
-    {
-      id: 3,
-      title: "Event Update",
-      message: "Workshop location has been changed to Room 302.",
-      time: "Yesterday",
-      type: "warning"
+    } catch (error) {
+      toast({
+        title: "Registration Failed",
+        description: error.message || "Please try again later",
+        variant: "destructive",
+      });
     }
-  ];
+  };
 
   return (
-    <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-          Student Dashboard
-        </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Welcome back, {user.name}! Here's what's happening with your events.
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Student Dashboard</h1>
+        <p className="text-gray-500">
+          Welcome back, {user.name}! Stay updated with campus events.
         </p>
-
-        {/* Stats Section */}
-        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-srm-green/10 rounded-md p-3">
-                  <Ticket className="h-6 w-6 text-srm-green" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                      Registered Events
-                    </dt>
-                    <dd>
-                      <div className="text-lg font-medium text-gray-900 dark:text-white">
-                        {stats.registered}
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
-              <div className="text-sm">
-                <Link
-                  to="/dashboard/tickets"
-                  className="font-medium text-srm-green hover:text-srm-green-dark"
-                >
-                  View all
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-srm-gold/10 rounded-md p-3">
-                  <Clock className="h-6 w-6 text-srm-gold" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                      Upcoming Events
-                    </dt>
-                    <dd>
-                      <div className="text-lg font-medium text-gray-900 dark:text-white">
-                        {stats.upcoming}
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
-              <div className="text-sm">
-                <Link
-                  to="/events"
-                  className="font-medium text-srm-green hover:text-srm-green-dark"
-                >
-                  View all
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-purple-100 rounded-md p-3">
-                  <CalendarCheck className="h-6 w-6 text-purple-600" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                      Attended Events
-                    </dt>
-                    <dd>
-                      <div className="text-lg font-medium text-gray-900 dark:text-white">
-                        {stats.attended}
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
-              <div className="text-sm">
-                <Link
-                  to="/dashboard/history"
-                  className="font-medium text-srm-green hover:text-srm-green-dark"
-                >
-                  View history
-                </Link>
-              </div>
-            </div>
-          </div>
+      </div>
+      
+      {/* Student Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Registered Events</CardTitle>
+            <TicketIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3</div>
+            <p className="text-xs text-muted-foreground">2 upcoming, 1 past</p>
+          </CardContent>
+          <CardFooter>
+            <Link to="/dashboard/tickets" className="w-full">
+              <Button variant="outline" size="sm" className="w-full">
+                View Your Tickets
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Department</CardTitle>
+            <Tag className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold">Computer Science</div>
+            <p className="text-xs text-muted-foreground">Year {user.yearOfStudy || 2}</p>
+          </CardContent>
+          <CardFooter>
+            <Link to="/dashboard/profile" className="w-full">
+              <Button variant="outline" size="sm" className="w-full">
+                Update Profile
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Campus Events</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{upcomingEvents.length || 0}</div>
+            <p className="text-xs text-muted-foreground">Upcoming events</p>
+          </CardContent>
+          <CardFooter>
+            <Link to="/events" className="w-full">
+              <Button variant="outline" size="sm" className="w-full">
+                Browse All Events
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+      
+      {/* Upcoming Events */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Upcoming Events</h2>
+          <Link to="/events">
+            <Button variant="link" className="text-srm-green">
+              View All
+            </Button>
+          </Link>
         </div>
-
-        {/* Main Content */}
-        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Upcoming Events */}
-          <div className="lg:col-span-2 bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                Recommended Events
-              </h2>
-              <Link to="/events">
-                <Button variant="outline" size="sm">
-                  View All
-                </Button>
-              </Link>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mockEvents.map(event => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
+        
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-srm-green"></div>
           </div>
-
-          {/* Side Panels */}
-          <div className="space-y-6">
-            {/* Notifications */}
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                Recent Notifications
-              </h2>
-              <div className="space-y-4">
-                {notifications.map(notification => (
-                  <div key={notification.id} className="flex">
-                    <div className="mr-3 flex-shrink-0">
-                      {notification.type === 'success' && (
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <Ticket className="w-4 h-4 text-green-600" />
-                        </div>
-                      )}
-                      {notification.type === 'info' && (
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Clock className="w-4 h-4 text-blue-600" />
-                        </div>
-                      )}
-                      {notification.type === 'warning' && (
-                        <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                          <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                        </div>
-                      )}
+        ) : upcomingEvents.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {upcomingEvents.map((event) => (
+              <Card key={event.id} className="overflow-hidden">
+                <div className="h-40 overflow-hidden">
+                  <img 
+                    src={event.image} 
+                    alt={event.title} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg">{event.title}</CardTitle>
+                    <Badge className="bg-srm-green">{event.category}</Badge>
+                  </div>
+                  <CardDescription className="line-clamp-2">
+                    {event.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm">
+                      <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                      <span>{new Date(event.date).toLocaleDateString()}</span>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {notification.title}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        {notification.time}
-                      </p>
+                    <div className="flex items-center text-sm">
+                      <Clock className="h-4 w-4 mr-2 text-gray-500" />
+                      <span>{event.time}</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+                      <span>{event.location}</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <Users className="h-4 w-4 mr-2 text-gray-500" />
+                      <span>{event.registrations} / {event.capacity} registered</span>
                     </div>
                   </div>
-                ))}
-              </div>
-              <div className="mt-4 text-center">
-                <Button variant="link" className="text-srm-green hover:text-srm-green-dark text-sm">
-                  View all notifications
-                </Button>
-              </div>
-            </div>
-
-            {/* Upcoming Tickets */}
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                Your Tickets
-              </h2>
-              <div className="space-y-3">
-                {mockTickets.map(ticket => (
-                  <div key={ticket.id} className="border border-gray-200 rounded-md p-3">
-                    <p className="font-medium text-sm">{ticket.event.title}</p>
-                    <div className="flex justify-between mt-1 text-xs text-gray-500">
-                      <span>{ticket.event.date}</span>
-                      <span>{ticket.ticketId}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 text-center">
-                <Link to="/dashboard/tickets">
-                  <Button className="bg-srm-green text-white hover:bg-srm-green-dark w-full text-sm">
-                    View All Tickets
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Link to={`/events/${event.id}`}>
+                    <Button variant="outline">View Details</Button>
+                  </Link>
+                  <Button 
+                    className="bg-srm-green hover:bg-srm-green-dark" 
+                    onClick={() => handleRegisterForEvent(event.id)}
+                  >
+                    Register Now
                   </Button>
-                </Link>
-              </div>
-            </div>
+                </CardFooter>
+              </Card>
+            ))}
           </div>
-        </div>
+        ) : (
+          <Card className="p-8 text-center">
+            <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium">No upcoming events</h3>
+            <p className="text-gray-500 mt-2 mb-4">
+              Check back later for new events or browse all events
+            </p>
+            <Link to="/events">
+              <Button className="bg-srm-green hover:bg-srm-green-dark">
+                Browse All Events
+              </Button>
+            </Link>
+          </Card>
+        )}
       </div>
     </div>
   );

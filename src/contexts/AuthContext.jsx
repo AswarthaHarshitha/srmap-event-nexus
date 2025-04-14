@@ -43,6 +43,90 @@ const authAPI = {
     });
   },
   
+  socialLogin: (provider, profile) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(async () => {
+        try {
+          // In a real implementation, this would verify the token with the provider
+          // For demo, we'll create a user based on the profile
+          let role = 'student'; // Default role for social logins
+          if (profile.email.includes('admin')) {
+            role = 'admin';
+          } else if (profile.email.includes('organizer') || profile.email.includes('org')) {
+            role = 'organizer';
+          }
+          
+          const mockUser = {
+            id: `${provider}_${Math.random().toString(36).substring(2, 9)}`,
+            name: profile.name || profile.email.split('@')[0],
+            email: profile.email,
+            role,
+            department: role === 'student' ? 'Computer Science' : '',
+            yearOfStudy: role === 'student' ? Math.floor(Math.random() * 4) + 1 : null,
+            registeredEvents: [],
+            profileImage: profile.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}&backgroundColor=b6e3f4,c0aede,d1d4f9`,
+            socialProvider: provider
+          };
+          
+          // Simulate storing in MongoDB
+          const createdUser = await mockMongoDBConnection.createUser({
+            provider,
+            providerId: profile.id,
+            name: profile.name || profile.email.split('@')[0],
+            email: profile.email,
+            role,
+            createdAt: new Date().toISOString()
+          });
+          
+          console.log(`${provider} login successful, user created in MongoDB:`, createdUser);
+          
+          localStorage.setItem('user', JSON.stringify(mockUser));
+          localStorage.setItem('token', `mock-jwt-${provider}-token-` + Date.now());
+          resolve(mockUser);
+        } catch (error) {
+          console.error(`${provider} login error:`, error);
+          reject(new Error(`${provider} login failed`));
+        }
+      }, 800);
+    });
+  },
+  
+  // Google OAuth login
+  googleLogin: () => {
+    // In a real implementation, this would redirect to Google
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        // Simulate a successful Google login
+        const mockGoogleProfile = {
+          id: 'google_' + Math.random().toString(36).substring(2, 9),
+          name: 'Google User',
+          email: `user_${Math.floor(Math.random() * 1000)}@gmail.com`,
+          picture: 'https://lh3.googleusercontent.com/a/default-user'
+        };
+        
+        authAPI.socialLogin('google', mockGoogleProfile).then(resolve).catch(reject);
+      }, 1000);
+    });
+  },
+  
+  // GitHub OAuth login
+  githubLogin: () => {
+    // In a real implementation, this would redirect to GitHub
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        // Simulate a successful GitHub login
+        const mockGithubProfile = {
+          id: 'github_' + Math.random().toString(36).substring(2, 9),
+          name: 'GitHub User',
+          email: `dev_${Math.floor(Math.random() * 1000)}@github.com`,
+          picture: 'https://avatars.githubusercontent.com/u/12345678'
+        };
+        
+        authAPI.socialLogin('github', mockGithubProfile).then(resolve).catch(reject);
+      }, 1000);
+    });
+  },
+  
   register: (name, email, password, role = 'student') => {
     // This would be an actual API call in production
     return new Promise((resolve, reject) => {
@@ -165,6 +249,36 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const user = await authAPI.googleLogin();
+      setUser(user);
+      return user;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const githubLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const user = await authAPI.githubLogin();
+      setUser(user);
+      return user;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const register = async (name, email, password, role = 'student') => {
     setLoading(true);
     setError(null);
@@ -243,6 +357,8 @@ export const AuthProvider = ({ children }) => {
         loading,
         error,
         login,
+        googleLogin,
+        githubLogin,
         register,
         logout,
         updateProfile,

@@ -9,11 +9,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, googleLogin, githubLogin } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState({ google: false, github: false });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -56,12 +57,72 @@ const LoginPage = () => {
     }
   };
 
-  const handleSocialLogin = (provider) => {
-    toast({
-      title: `${provider} Sign In`,
-      description: "This feature is coming soon!",
-      variant: "info",
-    });
+  const handleGoogleLogin = async () => {
+    setSocialLoading(prev => ({ ...prev, google: true }));
+    
+    try {
+      const user = await googleLogin();
+      
+      toast({
+        title: "Google Login Successful",
+        description: `Welcome, ${user.name}`,
+        variant: "success",
+      });
+      
+      // Redirect based on role
+      switch (user.role) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'organizer':
+          navigate('/organizer');
+          break;
+        default:
+          navigate('/dashboard');
+      }
+    } catch (error) {
+      toast({
+        title: "Google Login Failed",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setSocialLoading(prev => ({ ...prev, google: false }));
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    setSocialLoading(prev => ({ ...prev, github: true }));
+    
+    try {
+      const user = await githubLogin();
+      
+      toast({
+        title: "GitHub Login Successful",
+        description: `Welcome, ${user.name}`,
+        variant: "success",
+      });
+      
+      // Redirect based on role
+      switch (user.role) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'organizer':
+          navigate('/organizer');
+          break;
+        default:
+          navigate('/dashboard');
+      }
+    } catch (error) {
+      toast({
+        title: "GitHub Login Failed",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setSocialLoading(prev => ({ ...prev, github: false }));
+    }
   };
 
   return (
@@ -153,18 +214,28 @@ const LoginPage = () => {
             type="button"
             variant="outline"
             className="w-full"
-            onClick={() => handleSocialLogin('Google')}
+            onClick={handleGoogleLogin}
+            disabled={socialLoading.google}
           >
-            <Mail className="w-4 h-4 mr-2" />
+            {socialLoading.google ? (
+              <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-srm-green mr-2"></span>
+            ) : (
+              <Mail className="w-4 h-4 mr-2" />
+            )}
             Google
           </Button>
           <Button
             type="button"
             variant="outline"
             className="w-full"
-            onClick={() => handleSocialLogin('GitHub')}
+            onClick={handleGithubLogin}
+            disabled={socialLoading.github}
           >
-            <Github className="w-4 h-4 mr-2" />
+            {socialLoading.github ? (
+              <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-srm-green mr-2"></span>
+            ) : (
+              <Github className="w-4 h-4 mr-2" />
+            )}
             GitHub
           </Button>
         </div>

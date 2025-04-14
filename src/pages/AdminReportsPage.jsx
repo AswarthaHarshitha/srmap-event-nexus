@@ -170,7 +170,8 @@ const AdminReportsPage = () => {
                 <TableRow>
                   <TableHead>Report Name</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Download</TableHead>
+                  <TableHead>Downloads</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -178,7 +179,8 @@ const AdminReportsPage = () => {
                   <TableRow key={report.id}>
                     <TableCell className="font-medium">{report.name}</TableCell>
                     <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
-                    <TableCell>
+                    <TableCell>{report.downloadCount}</TableCell>
+                    <TableCell className="text-right">
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -192,14 +194,36 @@ const AdminReportsPage = () => {
               </TableBody>
             </Table>
           </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full" onClick={() => handleDownloadReport("All Reports")}>
-              <BarChart3 className="mr-2 h-4 w-4" />
-              View All Reports
-            </Button>
-          </CardFooter>
         </Card>
       </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Event Participation Analysis</CardTitle>
+          <CardDescription>
+            Overview of event participation across departments
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80 flex items-center justify-center border rounded-md">
+            <div className="text-center">
+              <BarChart3 className="mx-auto h-16 w-16 text-gray-300" />
+              <p className="mt-2 text-sm text-gray-500">
+                Analytics chart will appear here
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-4"
+                onClick={() => handleDownloadReport("Analytics Chart")}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Export as PDF
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
