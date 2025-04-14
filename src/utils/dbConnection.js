@@ -10,6 +10,7 @@ const mockMongoDBConnection = {
   testConnection: () => {
     return new Promise((resolve) => {
       setTimeout(() => {
+        console.log("Testing connection to MongoDB: mongodb://localhost:27017/event_sphere");
         resolve({
           success: true,
           message: 'Successfully connected to MongoDB',
@@ -29,10 +30,14 @@ const mockMongoDBConnection = {
     });
   },
   
-  // Mock CRUD operations
+  // Mock CRUD operations with improved console logging and MongoDB Compass simulation
   findUsers: (query = {}) => {
+    console.log("MongoDB Query: Finding users with query:", query);
     // In real implementation, this would call the backend API
-    return Promise.resolve([
+    const users = JSON.parse(localStorage.getItem('mongodb_users') || '[]');
+    
+    // Return stored users if available, otherwise return sample data
+    return Promise.resolve(users.length > 0 ? users : [
       { 
         id: "usr1", 
         name: "John Doe", 
@@ -56,6 +61,7 @@ const mockMongoDBConnection = {
   },
   
   findEvents: (query = {}) => {
+    console.log("MongoDB Query: Finding events with query:", query);
     // In real implementation, this would call the backend API
     const events = JSON.parse(localStorage.getItem('events') || '[]');
     return Promise.resolve(events.length > 0 ? events : [
@@ -70,6 +76,7 @@ const mockMongoDBConnection = {
         status: "approved",
         registrations: 87,
         capacity: 100,
+        organizerId: "org1",
         image: "https://images.unsplash.com/photo-1593720219276-0b1eacd0aef4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2071&q=80",
       },
       // More mock events...
@@ -77,8 +84,7 @@ const mockMongoDBConnection = {
   },
   
   createUser: (userData) => {
-    // In real implementation, this would call the backend API
-    console.log('Creating new user in MongoDB:', userData);
+    console.log('MongoDB: Creating new user:', userData);
     
     // Store in local storage to simulate persistence
     const users = JSON.parse(localStorage.getItem('mongodb_users') || '[]');
@@ -92,12 +98,12 @@ const mockMongoDBConnection = {
     users.push(newUser);
     localStorage.setItem('mongodb_users', JSON.stringify(users));
     
+    console.log('MongoDB: User created successfully:', newUser);
     return Promise.resolve(newUser);
   },
   
   createEvent: (eventData) => {
-    // In real implementation, this would call the backend API
-    console.log('Creating new event in MongoDB:', eventData);
+    console.log('MongoDB: Creating new event:', eventData);
     
     // Store in local storage to simulate persistence
     const events = JSON.parse(localStorage.getItem('events') || '[]');
@@ -112,11 +118,12 @@ const mockMongoDBConnection = {
     events.push(newEvent);
     localStorage.setItem('events', JSON.stringify(events));
     
+    console.log('MongoDB: Event created successfully:', newEvent);
     return Promise.resolve(newEvent);
   },
   
   updateEvent: (eventId, eventData) => {
-    console.log('Updating event in MongoDB:', eventId, eventData);
+    console.log('MongoDB: Updating event:', eventId, eventData);
     
     // Update in local storage
     const events = JSON.parse(localStorage.getItem('events') || '[]');
@@ -125,32 +132,38 @@ const mockMongoDBConnection = {
     if (eventIndex !== -1) {
       events[eventIndex] = { ...events[eventIndex], ...eventData };
       localStorage.setItem('events', JSON.stringify(events));
+      console.log('MongoDB: Event updated successfully:', events[eventIndex]);
       return Promise.resolve(events[eventIndex]);
     }
     
+    console.error('MongoDB: Event not found for update:', eventId);
     return Promise.reject(new Error('Event not found'));
   },
   
   deleteEvent: (eventId) => {
-    console.log('Deleting event from MongoDB:', eventId);
+    console.log('MongoDB: Deleting event:', eventId);
     
     // Remove from local storage
     const events = JSON.parse(localStorage.getItem('events') || '[]');
     const filteredEvents = events.filter(event => event.id !== eventId);
     
     localStorage.setItem('events', JSON.stringify(filteredEvents));
+    console.log('MongoDB: Event deleted successfully');
     return Promise.resolve({ success: true });
   },
   
   // Get events for a specific user (organizer)
   getOrganizerEvents: (organizerId) => {
+    console.log('MongoDB: Finding events for organizer:', organizerId);
     const events = JSON.parse(localStorage.getItem('events') || '[]');
-    return Promise.resolve(events.filter(event => event.organizerId === organizerId));
+    const organizerEvents = events.filter(event => event.organizerId === organizerId);
+    console.log(`MongoDB: Found ${organizerEvents.length} events for organizer ${organizerId}`);
+    return Promise.resolve(organizerEvents);
   },
   
   // Register user for an event
   registerForEvent: (eventId, userId) => {
-    console.log('Registering user for event in MongoDB:', userId, eventId);
+    console.log('MongoDB: Registering user for event:', userId, eventId);
     
     // Update events in local storage
     const events = JSON.parse(localStorage.getItem('events') || '[]');
@@ -174,9 +187,11 @@ const mockMongoDBConnection = {
       tickets.push(newTicket);
       localStorage.setItem('tickets', JSON.stringify(tickets));
       
+      console.log('MongoDB: Registration successful, ticket created:', newTicket);
       return Promise.resolve(newTicket);
     }
     
+    console.error('MongoDB: Event not found for registration:', eventId);
     return Promise.reject(new Error('Event not found'));
   }
 };

@@ -7,6 +7,7 @@ const AuthContext = createContext();
 // Mock authentication API - would be replaced with actual API calls
 const authAPI = {
   login: (email, password) => {
+    console.log('Authenticating user with email:', email);
     // This would be an actual API call in production
     return new Promise((resolve, reject) => {
       setTimeout(() => {
@@ -31,12 +32,19 @@ const authAPI = {
           };
           
           // Simulate storing in MongoDB
-          console.log('Logging in user and updating in MongoDB:', mockUser);
+          console.log('Saving user login to MongoDB:', mockUser);
           
           localStorage.setItem('user', JSON.stringify(mockUser));
           localStorage.setItem('token', 'mock-jwt-token-' + Date.now());
+          
+          // Log the authentication success
+          console.log('Authentication successful for:', email);
+          console.log('User role:', role);
+          console.log('Redirecting to appropriate dashboard');
+          
           resolve(mockUser);
         } else {
+          console.error('Login failed: Invalid credentials');
           reject(new Error('Invalid credentials'));
         }
       }, 800);
@@ -44,6 +52,7 @@ const authAPI = {
   },
   
   socialLogin: (provider, profile) => {
+    console.log(`Processing ${provider} social login for:`, profile.email);
     return new Promise((resolve, reject) => {
       setTimeout(async () => {
         try {
@@ -69,6 +78,14 @@ const authAPI = {
           };
           
           // Simulate storing in MongoDB
+          console.log(`Creating ${provider} user in MongoDB:`, {
+            provider,
+            providerId: profile.id,
+            name: profile.name || profile.email.split('@')[0],
+            email: profile.email,
+            role
+          });
+          
           const createdUser = await mockMongoDBConnection.createUser({
             provider,
             providerId: profile.id,
@@ -78,7 +95,7 @@ const authAPI = {
             createdAt: new Date().toISOString()
           });
           
-          console.log(`${provider} login successful, user created in MongoDB:`, createdUser);
+          console.log(`${provider} login successful, user saved in MongoDB:`, createdUser);
           
           localStorage.setItem('user', JSON.stringify(mockUser));
           localStorage.setItem('token', `mock-jwt-${provider}-token-` + Date.now());
@@ -93,41 +110,64 @@ const authAPI = {
   
   // Google OAuth login
   googleLogin: () => {
+    console.log('Initiating Google OAuth flow');
     // In a real implementation, this would redirect to Google
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        // Simulate a successful Google login
-        const mockGoogleProfile = {
-          id: 'google_' + Math.random().toString(36).substring(2, 9),
-          name: 'Google User',
-          email: `user_${Math.floor(Math.random() * 1000)}@gmail.com`,
-          picture: 'https://lh3.googleusercontent.com/a/default-user'
-        };
-        
-        authAPI.socialLogin('google', mockGoogleProfile).then(resolve).catch(reject);
+        try {
+          // Simulate a successful Google login
+          const randomName = ['John Smith', 'Jane Doe', 'Alex Johnson', 'Sarah Williams'][Math.floor(Math.random() * 4)];
+          const randomEmail = `user_${Math.floor(Math.random() * 1000)}@gmail.com`;
+          
+          const mockGoogleProfile = {
+            id: 'google_' + Math.random().toString(36).substring(2, 9),
+            name: randomName,
+            email: randomEmail,
+            picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(randomName)}&background=random`
+          };
+          
+          console.log('Google login successful, profile:', mockGoogleProfile);
+          
+          authAPI.socialLogin('google', mockGoogleProfile).then(resolve).catch(reject);
+        } catch (error) {
+          console.error('Google login failed:', error);
+          reject(error);
+        }
       }, 1000);
     });
   },
   
   // GitHub OAuth login
   githubLogin: () => {
+    console.log('Initiating GitHub OAuth flow');
     // In a real implementation, this would redirect to GitHub
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        // Simulate a successful GitHub login
-        const mockGithubProfile = {
-          id: 'github_' + Math.random().toString(36).substring(2, 9),
-          name: 'GitHub User',
-          email: `dev_${Math.floor(Math.random() * 1000)}@github.com`,
-          picture: 'https://avatars.githubusercontent.com/u/12345678'
-        };
-        
-        authAPI.socialLogin('github', mockGithubProfile).then(resolve).catch(reject);
+        try {
+          // Simulate a successful GitHub login
+          const randomName = ['Dev User', 'Coder Pro', 'GitHub Dev', 'Open Source Contributor'][Math.floor(Math.random() * 4)];
+          const randomEmail = `dev_${Math.floor(Math.random() * 1000)}@github.com`;
+          
+          const mockGithubProfile = {
+            id: 'github_' + Math.random().toString(36).substring(2, 9),
+            name: randomName,
+            email: randomEmail,
+            picture: `https://github.com/identicons/${Math.random().toString(36).substring(2, 9)}.png`
+          };
+          
+          console.log('GitHub login successful, profile:', mockGithubProfile);
+          
+          authAPI.socialLogin('github', mockGithubProfile).then(resolve).catch(reject);
+        } catch (error) {
+          console.error('GitHub login failed:', error);
+          reject(error);
+        }
       }, 1000);
     });
   },
   
   register: (name, email, password, role = 'student') => {
+    console.log('Registering new user:', { name, email, role });
     // This would be an actual API call in production
     return new Promise((resolve, reject) => {
       setTimeout(async () => {
@@ -152,6 +192,13 @@ const authAPI = {
           
           // Simulate storing in MongoDB
           try {
+            console.log('Creating user in MongoDB:', {
+              name,
+              email,
+              role,
+              createdAt: new Date().toISOString()
+            });
+            
             const createdUser = await mockMongoDBConnection.createUser({
               name,
               email,
@@ -160,15 +207,16 @@ const authAPI = {
               createdAt: new Date().toISOString()
             });
             
-            console.log('User created in MongoDB:', createdUser);
+            console.log('User created successfully in MongoDB:', createdUser);
+            localStorage.setItem('user', JSON.stringify(mockUser));
+            localStorage.setItem('token', 'mock-jwt-token-' + Date.now());
+            resolve(mockUser);
           } catch (error) {
             console.error('Error creating user in MongoDB:', error);
+            reject(error);
           }
-          
-          localStorage.setItem('user', JSON.stringify(mockUser));
-          localStorage.setItem('token', 'mock-jwt-token-' + Date.now());
-          resolve(mockUser);
         } else {
+          console.error('Registration failed: All fields are required');
           reject(new Error('All fields are required'));
         }
       }, 800);
@@ -176,6 +224,7 @@ const authAPI = {
   },
   
   logout: () => {
+    console.log('Logging out user');
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     return Promise.resolve();
@@ -191,6 +240,7 @@ const authAPI = {
   },
   
   updateProfile: (userData) => {
+    console.log('Updating user profile:', userData);
     return new Promise((resolve) => {
       setTimeout(() => {
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -216,13 +266,15 @@ export const AuthProvider = ({ children }) => {
     // Check if user is already logged in
     const currentUser = authAPI.getCurrentUser();
     if (currentUser) {
+      console.log('User found in localStorage:', currentUser);
       setUser(currentUser);
     }
     
     // Test MongoDB connection
+    console.log('Testing MongoDB connection...');
     mockMongoDBConnection.testConnection()
       .then(result => {
-        console.log('MongoDB connection test:', result);
+        console.log('MongoDB connection test result:', result);
         setDbConnected(result.success);
       })
       .catch(err => {
