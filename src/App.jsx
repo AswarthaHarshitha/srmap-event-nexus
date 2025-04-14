@@ -23,11 +23,15 @@ import SignupPage from "@/pages/SignupPage";
 import StudentDashboardPage from "@/pages/StudentDashboardPage";
 import OrganizerDashboardPage from "@/pages/OrganizerDashboardPage";
 import OrganizerEventsPage from "@/pages/OrganizerEventsPage";
+import OrganizerRegistrationsPage from "@/pages/OrganizerRegistrationsPage";
+import OrganizerAnalyticsPage from "@/pages/OrganizerAnalyticsPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import AdminUsersPage from "@/pages/AdminUsersPage";
 import AdminEventsPage from "@/pages/AdminEventsPage";
 import AdminReportsPage from "@/pages/AdminReportsPage";
 import AdminSystemPage from "@/pages/AdminSystemPage";
+import AdminSettingsPage from "@/pages/AdminSettingsPage";
+import AdminApprovalsPage from "@/pages/AdminApprovalsPage";
 import TicketsPage from "@/pages/TicketsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import NotFound from "@/pages/NotFound";
@@ -72,8 +76,8 @@ const App = () => (
                   <Route index element={<OrganizerDashboardPage />} />
                   <Route path="create-event" element={<CreateEventPage />} />
                   <Route path="events" element={<OrganizerEventsPage />} />
-                  <Route path="registrations" element={<div className="p-6">Your event registrations will appear here</div>} />
-                  <Route path="analytics" element={<div className="p-6">Event analytics will appear here</div>} />
+                  <Route path="registrations" element={<OrganizerRegistrationsPage />} />
+                  <Route path="analytics" element={<OrganizerAnalyticsPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                 </Route>
 
@@ -82,10 +86,10 @@ const App = () => (
                   <Route index element={<AdminDashboardPage />} />
                   <Route path="events" element={<AdminEventsPage />} />
                   <Route path="users" element={<AdminUsersPage />} />
-                  <Route path="approvals" element={<div className="p-6">Approval requests will appear here</div>} />
+                  <Route path="approvals" element={<AdminApprovalsPage />} />
                   <Route path="system" element={<AdminSystemPage />} />
                   <Route path="reports" element={<AdminReportsPage />} />
-                  <Route path="settings" element={<div className="p-6">Settings will appear here</div>} />
+                  <Route path="settings" element={<AdminSettingsPage />} />
                 </Route>
 
                 {/* Catch-all */}
